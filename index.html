@@ -1,0 +1,135 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>wheatherapp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: black;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 500px;
+            padding: 20px;
+            background-color: aquamarine;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: red;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: whitesmoke;
+            color:black;
+            font-weight: bold;
+        }
+
+        #weather-info {
+            margin-top: 20px;
+        }
+
+        .weather-detail {
+            margin-top: 20px;
+        }
+
+        .error {
+            color: red;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Check</h1>
+        <input type="text" id="location-input" placeholder="Enter city names (separated by commas)">
+        <button id="search-btn">Get Weather</button>
+        <div id="weather-info"></div>
+    </div>
+    <script>
+        const apiKey = '0fc88763586db55fdfdce1dac8f21118';
+
+        document.getElementById('search-btn').addEventListener('click', () => {
+            const locations = document.getElementById('location-input').value.split(',');
+            if (locations.length > 0) {
+                fetchWeather(locations);
+            } else {
+                displayError('Please enter at least one city name.');
+            }
+        });
+
+        function fetchWeather(locations) {
+            const promises = locations.map(location => {
+                const url = `http://api.openweathermap.org/data/2.5/weather?q=${location.trim()}&appid=${apiKey}&units=metric`;
+                return fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.cod === 200) {
+                            return data;
+                        } else {
+                            return null;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching weather data:', error);
+                        return null;
+                    });
+            });
+
+            Promise.all(promises).then(data => {
+                const weatherInfo = document.getElementById('weather-info');
+                weatherInfo.innerHTML = '';
+                data.forEach((weather, index) => {
+                    if (weather) {
+                        const city = locations[index].trim();
+                        weatherInfo.innerHTML += `
+                            <h2>Weather in ${city}</h2>
+                            <div class="weather-detail">
+                                <p>Temperature: ${weather.main.temp} °C</p>
+                                <p>Weather: ${weather.weather[0].description}</p>
+                                <p>Humidity: ${weather.main.humidity}%</p>
+                                <p>Wind Speed: ${weather.wind.speed} m/s</p>
+                            </div>
+                        `;
+                    } else {
+                        const city = locations[index].trim();
+                        weatherInfo.innerHTML += `<p class="error">sorry, We can't find weather of  ${city}. please enter major cities.</p>`;
+                    }
+                });
+            });
+        }
+
+        function displayError(message) {
+            const weatherInfo = document.getElementById('weather-info');
+            weatherInfo.innerHTML = `<p class="error">${message}</p>`;
+        }
+    </script>
+</body>
+</html>
